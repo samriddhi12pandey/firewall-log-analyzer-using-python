@@ -1,12 +1,12 @@
 # firewall-log-analyzer-using-python
 A Python-based tool to analyze firewall logs, correlate events by IP and time, detect attack patterns, and generate security reports.
-#Overview
+# Overview
 
 Firewall logs are usually very large and difficult to analyze manually. This project focuses on building a Python-based tool that parses firewall logs, correlates events by IP address and time, identifies suspicious or attack patterns, and generates useful reports for security analysis.
 
 The system is designed for Linux environments using UFW/iptables logs and helps in basic network monitoring and security auditing.
 
-Objectives
+# Objectives
 
 Parse firewall log files automatically
 
@@ -18,7 +18,7 @@ Generate structured reports
 
 Reduce manual log analysis effort
 
-Tools & Technologies
+# Tools & Technologies
 Python 
 
 Pandas
@@ -27,12 +27,12 @@ Regex
 
 Linux
 
-#roject Status
+# Project Status
 
  Under Development
 Initial design and log parsing module planned.
 
-Team Members
+# Team Members
 
 Samriddhi Pandey – (2415001399).
 
@@ -45,10 +45,8 @@ Riya Tomar – (2415001196).
 
 # License
 
-##This project is developed for academic purposes.
+## This project is developed for academic purposes.
 
 # Acknowledgements
 
-##Thanks to our faculty and mentors for their guidance and support.
-
-UFW / iptables
+## Thanks to our faculty and mentors for their guidance and support.

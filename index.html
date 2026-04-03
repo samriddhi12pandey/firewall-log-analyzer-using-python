@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firewall Log Analyzer v2.0 — GLA University</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div id="overlay"><div class="loader-ring"></div><div class="loader-text">PROCESSING LOGS...</div></div>
+<div id="toast"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-block">
+    <div class="logo-sigil">🛡</div>
+    <div class="logo-text">
+      <h1>FIREWALL ANALYZER <span style="font-size:12px;color:#5a5a42">v2.0</span></h1>
+      <p>Network Security Operations // GLA University</p>
+    </div>
+  </div>
+  <div class="header-mid">
+    <div class="sys-stat"><span>TOTAL</span><strong id="h-total">—</strong></div>
+    <div class="sys-stat danger"><span>BLOCKED</span><strong id="h-blocked">—</strong></div>
+    <div class="sys-stat safe"><span>ALLOWED</span><strong id="h-allowed">—</strong></div>
+    <div class="sys-stat warn"><span>THREATS</span><strong id="h-threats">—</strong></div>
+  </div>
+  <div class="header-right">
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light">🌓</button>
+    <div class="live-dot"><span></span>LIVE</div>
+    <div class="user-badge">👤 {{ user }}</div>
+    <a href="/logout" class="btn-xs">LOGOUT</a>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('dashboard')">📊 Dashboard</button>
+  <button class="tab" onclick="showTab('map')">🗺️ Geo Map</button>
+  <button class="tab" onclick="showTab('blacklist')">🚫 Blacklist</button>
+  <button class="tab" onclick="showTab('alerts')">🚨 Threats</button>
+  <button class="tab" onclick="showTab('email')">📧 Email Alerts</button>
+</div>
+
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Input Source</div>
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" id="file-input" accept=".log,.txt,.csv">
+      <div class="uz-icon">📂</div>
+      <div class="uz-main">DROP LOG FILE HERE</div>
+      <div class="uz-sub">UFW · iptables · CSV</div>
+      <div id="file-name"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="handleUpload()">▶ ANALYZE FILE</button>
+      <button class="btn btn-ghost" onclick="loadSample()">⊞ SAMPLE DATA</button>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Filter & Search</div>
+    <div class="filter-group"><label>Search</label><input type="text" class="filter-input" id="f-search" placeholder="keyword..."></div>
+    <div class="filter-group"><label>Source IP</label><input type="text" class="filter-input" id="f-ip" placeholder="192.168..."></div>
+    <div class="filter-group"><label>Action</label>
+      <select class="filter-select" id="f-action"><option value="">All</option><option>ALLOW</option><option>BLOCK</option></select></div>
+    <div class="filter-group"><label>Protocol</label>
+      <select class="filter-select" id="f-proto"><option value="">All</option><option>TCP</option><option>UDP</option><option>ICMP</option></select></div>
+    <div class="filter-group"><label>Port</label><input type="number" class="filter-input" id="f-port" placeholder="22, 443..."></div>
+    <div class="filter-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="f-blacklisted" style="accent-color:#f05050"> Show Blacklisted Only
+      </label>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="applyFilter()">⊳ APPLY</button>
+      <button class="btn btn-danger" onclick="clearFilter()">✕ CLEAR</button>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Active Threats</div>
+    <div id="sidebar-threats"><div class="no-data-sm">No data loaded</div></div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+<!-- ═══ DASHBOARD TAB ═══ -->
+<div id="tab-dashboard" class="tab-content active">
+  <div class="stats-row">
+    <div class="stat-tile t1"><div class="tile-label">Total Events</div>
+      <div class="tile-val" id="s-total">0</div><div class="tile-sub">log entries</div><div class="bg-num">∞</div></div>
+    <div class="stat-tile t2"><div class="tile-label">Blocked</div>
+      <div class="tile-val" id="s-blocked">0</div><div class="tile-sub" id="s-brate">0%</div><div class="bg-num">!</div></div>
+    <div class="stat-tile t3"><div class="tile-label">Allowed</div>
+      <div class="tile-val" id="s-allowed">0</div><div class="tile-sub">permitted</div><div class="bg-num">✓</div></div>
+    <div class="stat-tile t4"><div class="tile-label">Threats</div>
+      <div class="tile-val" id="s-threats">0</div><div class="tile-sub">incidents</div><div class="bg-num">⚠</div></div>
+    <div class="stat-tile t5"><div class="tile-label">Blacklisted</div>
+      <div class="tile-val" id="s-blacklist">0</div><div class="tile-sub">blocked IPs</div><div class="bg-num">🚫</div></div>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-tile"><div class="tile-header"><div class="tile-title">Traffic Timeline</div></div><canvas id="chart-timeline" height="160"></canvas></div>
+    <div class="chart-tile"><div class="tile-header"><div class="tile-title">Allow vs Block</div></div><canvas id="chart-actions" height="160"></canvas></div>
+  </div>
+  <div class="charts-row3">
+    <div class="chart-tile"><div class="tile-header"><div class="tile-title">Top Source IPs</div></div><canvas id="chart-ips" height="180"></canvas></div>
+    <div class="chart-tile"><div class="tile-header"><div class="tile-title">Protocols</div></div><canvas id="chart-proto" height="180"></canvas></div>
+    <div class="chart-tile"><div class="tile-header"><div class="tile-title">Top Dest Ports</div></div><canvas id="chart-ports" height="180"></canvas></div>
+  </div>
+  <!-- Log Table -->
+  <div class="section-tile">
+    <div class="tile-header">
+      <div class="tile-title">📋 Log Entries</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="table-info" class="count-badge">—</span>
+        <button class="btn-xs" onclick="exportCSV()">⬇ CSV</button>
+        <button class="btn-xs" onclick="exportPDF()">⬇ PDF</button>
+      </div>
+    </div>
+    <div class="log-wrap">
+      <table><thead><tr>
+        <th>Timestamp</th><th>Src IP</th><th>Dst IP</th><th>S.Port</th><th>D.Port</th><th>Proto</th><th>Action</th><th>Bytes</th><th>BL</th>
+      </tr></thead>
+      <tbody id="log-tbody"><tr><td colspan="9" class="td-empty">[ Load data ]</td></tr></tbody></table>
+    </div>
+    <div class="pagination">
+      <span id="page-info">—</span>
+      <div class="page-btns">
+        <button class="page-btn" id="btn-prev" onclick="changePage(-1)" disabled>◀</button>
+        <button class="page-btn" id="btn-next" onclick="changePage(1)" disabled>▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GEO MAP TAB ═══ -->
+<div id="tab-map" class="tab-content">
+  <div class="section-tile">
+    <div class="tile-header">
+      <div class="tile-title">🌍 Live IP Geolocation Map — Attack Origins</div>
+      <button class="btn-xs" onclick="loadGeoMap()">🔄 Refresh Map</button>
+    </div>
+    <div id="geo-map" style="height:480px;border:1px solid var(--border);border-radius:2px;"></div>
+    <div id="geo-list" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<!-- ═══ BLACKLIST TAB ═══ -->
+<div id="tab-blacklist" class="tab-content">
+  <div class="section-tile">
+    <div class="tile-header"><div class="tile-title">🚫 IP Blacklist Manager</div></div>
+    <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+      <input type="text" id="bl-ip-input" class="filter-input" placeholder="Enter IP to blacklist e.g. 45.33.32.156" style="flex:1;min-width:220px;">
+      <button class="btn btn-primary" onclick="addBlacklist()">+ ADD TO BLACKLIST</button>
+    </div>
+    <div id="blacklist-table"><div class="empty-state"><div class="e-icon">🚫</div><p>No IPs blacklisted yet</p></div></div>
+  </div>
+</div>
+
+<!-- ═══ THREATS TAB ═══ -->
+<div id="tab-alerts" class="tab-content">
+  <div class="section-tile">
+    <div class="tile-header">
+      <div class="tile-title">🚨 Threat Intelligence</div>
+      <span class="count-badge" id="threat-count-label">—</span>
+    </div>
+    <div id="alerts-list"><div class="empty-state"><div class="e-icon">🔍</div><p>Load log data to detect threats</p></div></div>
+  </div>
+</div>
+
+<!-- ═══ EMAIL TAB ═══ -->
+<div id="tab-email" class="tab-content">
+  <div class="section-tile">
+    <div class="tile-header"><div class="tile-title">📧 Email Alert Configuration</div></div>
+    <div class="email-form">
+      <div class="filter-group"><label>SMTP Server (e.g. smtp.gmail.com)</label><input type="text" class="filter-input" id="e-smtp" placeholder="smtp.gmail.com"></div>
+      <div class="filter-group"><label>SMTP Port</label><input type="number" class="filter-input" id="e-port" value="587"></div>
+      <div class="filter-group"><label>Your Email (sender)</label><input type="email" class="filter-input" id="e-user" placeholder="your@gmail.com"></div>
+      <div class="filter-group"><label>App Password</label><input type="password" class="filter-input" id="e-pass" placeholder="Gmail App Password"></div>
+      <div class="filter-group"><label>Alert Recipient Email</label><input type="email" class="filter-input" id="e-to" placeholder="alert@example.com"></div>
+      <div class="filter-group">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="e-enabled" style="accent-color:#e8a030"> Enable Email Alerts
+        </label>
+      </div>
+      <button class="btn btn-primary" onclick="saveEmailConfig()">💾 SAVE CONFIG</button>
+      <div style="margin-top:16px;padding:14px;background:rgba(232,160,48,0.05);border:1px solid rgba(232,160,48,0.2);font-size:11px;color:#888870;line-height:1.7">
+        ⚠ Gmail ke liye: Google Account → Security → 2FA enable karo → App Password generate karo<br>
+        Alert automatically trigger hoga jab HIGH severity threat detect ho!
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>FIREWALL LOG ANALYZER v2.0 — GLA UNIVERSITY — SAMRIDDHI · SANSKRITI · PRIYA · RIYA</footer>
+</main>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

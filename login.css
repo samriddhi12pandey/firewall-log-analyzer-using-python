@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+    background: #000814;
+    font-family: monospace;
+    color: #00ffcc;
+}
+
+/* GRID BACKGROUND (NOT MATRIX) */
+body::before {
+    content: "";
+    position: fixed;
+    width: 200%;
+    height: 200%;
+    background-image:
+        linear-gradient(#00ffcc22 1px, transparent 1px),
+        linear-gradient(90deg, #00ffcc22 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: move 8s linear infinite;
+    z-index: -1;
+}
+
+@keyframes move {
+    from { transform: translate(0,0); }
+    to { transform: translate(-50px,-50px); }
+}
+
+/* LOGIN BOX */
+.login-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    padding: 25px;
+    background: #020617;
+    border: 2px solid #00ffcc;
+    box-shadow: 0 0 25px #00ffcc;
+    border-radius: 10px;
+    text-align: center;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    background: transparent;
+    border: 1px solid #00ffcc;
+    color: #00ffcc;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #00ffcc;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.show-pass {
+    font-size: 12px;
+}
+
+/* MESSAGE */
+#message {
+    margin-top: 10px;
+    font-size: 12px;
+}
+
+/* OTP POPUP */
+#otpPopup {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #020617;
+    color: #00ffcc;
+    border: 1px solid #00ffcc;
+    padding: 12px;
+    box-shadow: 0 0 15px #00ffcc;
+    border-radius: 5px;
+}

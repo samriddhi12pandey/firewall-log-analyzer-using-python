@@ -33,7 +33,7 @@ firewall_project/
 ## 🚀 APNE SYSTEM PE KAISE CHALAYEIN (How to Run)
 
 ### Step 1 — Python Install Karo
-Python 3.8+ chahiye. Check karo:
+Python 3.8+ chahiye. Check it:
 ```bash
 python --version
 ```

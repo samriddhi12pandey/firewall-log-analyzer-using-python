@@ -41,7 +41,7 @@ Agar nahi hai: https://www.python.org/downloads/
 
 ---
 
-### Step 2 — Project Folder Mein Jao
+### Step 2 — Go to project folder
 ```bash
 cd firewall_project
 ```

@@ -48,7 +48,7 @@ cd firewall_project
 
 ---
 
-### Step 3 — Dependencies Install Karo
+### Step 3 — Install the Dependencies 
 ```bash
 pip install -r requirements.txt
 ```

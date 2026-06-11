@@ -55,7 +55,7 @@ pip install -r requirements.txt
 
 ---
 
-### Step 4 — App Chalao
+### Step 4 — Run the app 
 ```bash
 python app.py
 ```

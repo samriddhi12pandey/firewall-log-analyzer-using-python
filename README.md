@@ -60,7 +60,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Terminal mein dikhega:
+It shows in the terminal:
 ```
 ==================================================
   Firewall Log Analyzer — GLA University
@@ -70,7 +70,7 @@ Terminal mein dikhega:
 
 ---
 
-### Step 5 — Browser Mein Kholo
+### Step 5 — Open in Browser
 ```
 http://127.0.0.1:5000
 ```

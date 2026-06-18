@@ -81,7 +81,7 @@ http://127.0.0.1:5000
 
 ## 🧪 Testing — Sample Log Upload
 
-1. `logs/sample_logs.csv` file taiyar hai
+1. `logs/sample_logs.csv` file is reaady
 2. App mein **"DROP LOG FILE HERE"** pe click karo
 3. `sample_logs.csv` select karo
 4. **"ANALYZE FILE"** button dabaao
